@@ -22,17 +22,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
-
-        // Create default categories for new users
-        if (event === 'SIGNED_IN' && session?.user) {
-          setTimeout(() => {
-            checkAndCreateDefaultCategories(session.user.id);
-          }, 0);
-        }
       }
     );
 
@@ -45,6 +38,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      checkAndCreateDefaultCategories(user.id);
+    }
+  }, [user]);
 
   const checkAndCreateDefaultCategories = async (userId: string) => {
     const { data: existingCategories } = await supabase
